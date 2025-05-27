@@ -62,7 +62,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Token: $displayedToken', // Menggunakan token yang sudah dicek panjangnya
+              'SIAP: $displayedToken', // Menggunakan token yang sudah dicek panjangnya
               style: const TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 30),
