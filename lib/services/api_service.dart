@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http; // Library untuk HTTP requests
 
 class ApiService {
   // Base URL untuk API Anda. Penting: Ganti ini jika IP server berubah.
-  final String baseUrl = 'http://192.168.1.10:8000/api';
+  final String baseUrl = 'http://193.203.160.191:83/api';
 
   // Metode untuk melakukan login
   Future<String?> login(String email, String password) async {

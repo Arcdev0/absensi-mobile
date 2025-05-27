@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/change_password_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 
@@ -238,7 +239,13 @@ class _LoginPageState extends State<LoginPage>
                               const SizedBox(height: 16),
                               TextButton(
                                 onPressed: () {
-                                  // Navigasi ke halaman lupa password
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ChangePasswordScreen(),
+                                    ),
+                                  );
                                 },
                                 child: Text(
                                   'Lupa Password?',
