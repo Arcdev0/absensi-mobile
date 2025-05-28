@@ -109,4 +109,50 @@ class ApiService {
       return false; // Logout gagal karena error
     }
   }
+
+  Future<String> changePassword({
+  required String token,
+  required String currentPassword,
+  required String newPassword,
+  required String confirmPassword,
+}) async {
+  final url = Uri.parse('$baseUrl/change-password');
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'current_password': currentPassword,
+        'new_password': newPassword,
+        'new_password_confirmation': confirmPassword,
+      }),
+    );
+
+    print(
+      'Change Password Response: Status ${response.statusCode}, Body: ${response.body}',
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] == true) {
+        return data['message'] ?? 'Password changed successfully.';
+      } else {
+        throw Exception(data['message'] ?? 'Failed to change password.');
+      }
+    } else {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['message'] ?? 'Change password failed.');
+    }
+  } catch (e) {
+    print('Change Password Error: $e');
+    throw Exception('Gagal mengubah password: $e');
+  }
 }
+
+}
+
+

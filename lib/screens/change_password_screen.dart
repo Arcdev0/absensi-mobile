@@ -1,24 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/services/api_service.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
+  final String userToken; // UserToken harus disediakan
+
+  ChangePasswordScreen({required this.userToken});
+
   @override
   _ChangePasswordScreenState createState() => _ChangePasswordScreenState();
 }
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
+  String _currentPassword = '';
   String _newPassword = '';
   String _confirmNewPassword = '';
   bool _submitted = false;
 
+  bool _showCurrentPassword = false;
   bool _showNewPassword = false;
   bool _showConfirmPassword = false;
 
+  void showSnackBar(String message, {Color color = Colors.red}) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+  }
+
   @override
   void dispose() {
+    _currentPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -26,8 +43,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    final newPasswordHasError =
+        _newPassword.isNotEmpty && _newPassword == _currentPassword;
+        _newPassword.length < 6;
+
     final confirmPasswordHasError =
         _confirmNewPassword.isNotEmpty && _confirmNewPassword != _newPassword;
+    _confirmNewPassword.isNotEmpty && _confirmNewPassword == _currentPassword;
 
     final confirmPasswordIsValid =
         _confirmNewPassword.isNotEmpty && _confirmNewPassword == _newPassword;
@@ -53,13 +76,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'New Password',
+                  'Current Password',
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 10),
                 TextFormField(
-                  controller: _newPasswordController,
-                  obscureText: !_showNewPassword,
+                  controller: _currentPasswordController,
+                  obscureText: !_showCurrentPassword,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
@@ -68,24 +91,77 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       vertical: 14.0,
                       horizontal: 16.0,
                     ),
-                    hintText: 'Enter new password',
+                    hintText: 'Enter Old password',
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _showNewPassword ? Icons.visibility : Icons.visibility_off,
+                        _showCurrentPassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(
+                          () => _showCurrentPassword = !_showCurrentPassword,
+                        );
+                      },
+                    ),
+                  ),
+
+                  onChanged:
+                      (value) => setState(() => _currentPassword = value),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'New Password',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _newPasswordController,
+                  obscureText: !_showNewPassword,
+                  onChanged: (value) => setState(() => _newPassword = value),
+                  decoration: InputDecoration(
+                    hintText: 'Enter new password',
+                    errorText:
+                        newPasswordHasError
+                            ? 'Password tidak boleh sama dengan sebelumnya'
+                            : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                      borderSide: BorderSide(
+                        color: newPasswordHasError ? Colors.red : Colors.grey,
+                      ),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _showNewPassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() => _showNewPassword = !_showNewPassword);
                       },
                     ),
                   ),
-                  onChanged: (value) => setState(() => _newPassword = value),
                   validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Please enter new password';
+                    if (value == null || value.isEmpty) {
+                      return 'Silakan isi password baru';
+                    }
+                    if (value == _currentPassword) {
+                      return 'Password tidak boleh sama dengan sebelumnya';
                     }
                     return null;
                   },
                 ),
+
                 const SizedBox(height: 20),
                 const Text(
                   'Confirm New Password',
@@ -95,7 +171,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: !_showConfirmPassword,
-                  onChanged: (value) => setState(() => _confirmNewPassword = value),
+                  onChanged:
+                      (value) => setState(() => _confirmNewPassword = value),
                   decoration: InputDecoration(
                     hintText: 'Confirm new password',
                     contentPadding: const EdgeInsets.symmetric(
@@ -108,15 +185,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
                       borderSide: BorderSide(
-                        color: confirmPasswordIsValid
-                            ? Colors.green
-                            : Colors.grey.shade400,
+                        color:
+                            confirmPasswordIsValid
+                                ? Colors.green
+                                : Colors.grey.shade400,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
                       borderSide: BorderSide(
-                        color: confirmPasswordIsValid ? Colors.green : Colors.blue,
+                        color:
+                            confirmPasswordIsValid ? Colors.green : Colors.blue,
                         width: 2.0,
                       ),
                     ),
@@ -128,76 +207,94 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       borderRadius: BorderRadius.circular(8.0),
                       borderSide: const BorderSide(color: Colors.red),
                     ),
-                    errorText: confirmPasswordHasError
-                        ? 'Password tidak sinkron'
-                        : null,
+                    errorText:
+                        confirmPasswordHasError
+                            ? 'Password tidak sinkron'
+                            : null,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _showConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                        _showConfirmPassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
-                        setState(() => _showConfirmPassword = !_showConfirmPassword);
+                        setState(
+                          () => _showConfirmPassword = !_showConfirmPassword,
+                        );
                       },
                     ),
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Silakan konfirmasi password baru';
+                    }
+                    if (value != _newPassword) {
+                      return 'Password tidak sinkron';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 30),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       setState(() => _submitted = true);
 
                       final formValid = _formKey.currentState!.validate();
                       final confirmPasswordIsEmpty =
                           _confirmNewPassword.trim().isEmpty;
-                      final passwordMatch =
-                          _newPassword == _confirmNewPassword;
+                      final passwordMatch = _newPassword == _confirmNewPassword;
+                      final isSameAsOld = _newPassword == _currentPassword;
 
-                      if (!formValid || _newPassword.trim().isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Semua kolom harus diisi."),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
+                      if (!formValid) {
+                        if (_currentPassword.trim().isEmpty ||
+                            _newPassword.trim().isEmpty ||
+                            confirmPasswordIsEmpty) {
+                          showSnackBar("Semua kolom harus diisi.");
+                        } else if (isSameAsOld) {
+                          showSnackBar(
+                            "Password tidak boleh sama dengan sebelumnya.",
+                          );
+                        } else if (!passwordMatch) {
+                          showSnackBar("Password tidak sinkron.");
+                        } else {
+                          showSnackBar("Terdapat kesalahan pada input.");
+                        }
                         return;
                       }
 
-                      if (confirmPasswordIsEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Konfirmasi password harus diisi."),
-                            backgroundColor: Colors.red,
-                          ),
+                      // Hit API
+                      try {
+                        showSnackBar(
+                          "Mengubah password...",
+                          color: Colors.blue,
                         );
-                        return;
-                      }
-
-                      if (!passwordMatch) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Password tidak sinkron."),
-                            backgroundColor: Colors.red,
-                          ),
+                        final api = ApiService();
+                        final message = await api.changePassword(
+                          token: widget.userToken,
+                          currentPassword: _currentPassword,
+                          newPassword: _newPassword,
+                          confirmPassword: _confirmNewPassword,
                         );
-                        return;
+
+                        showSnackBar(message, color: Colors.green);
+
+                        // Reset field
+                        _currentPasswordController.clear();
+                        _newPasswordController.clear();
+                        _confirmPasswordController.clear();
+                        setState(() {
+                          _currentPassword = '';
+                          _newPassword = '';
+                          _confirmNewPassword = '';
+                        });
+                      } catch (e) {
+                        showSnackBar(
+                          'Gagal: ${e.toString()}',
+                          color: Colors.red,
+                        );
                       }
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Password successfully changed"),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-
-                      // Reset field
-                      _newPasswordController.clear();
-                      _confirmPasswordController.clear();
-                      setState(() {
-                        _newPassword = '';
-                        _confirmNewPassword = '';
-                      });
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),

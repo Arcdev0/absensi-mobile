@@ -239,13 +239,7 @@ class _LoginPageState extends State<LoginPage>
                               const SizedBox(height: 16),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ChangePasswordScreen(),
-                                    ),
-                                  );
+                                  
                                 },
                                 child: Text(
                                   'Lupa Password?',
