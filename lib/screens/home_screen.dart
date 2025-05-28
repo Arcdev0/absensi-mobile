@@ -40,18 +40,49 @@ class _MainScreenState extends State<MainScreen> {
         ),
         title: const Text('Aplikasi Absensi'),
         actions: [
-          IconButton(
+          PopupMenuButton<String>(
             icon: const CircleAvatar(
-              backgroundImage: AssetImage(
-                'assets/profile.png',
-              ), // Ganti dengan foto profil
+              backgroundImage: AssetImage('assets/profile.png'),
             ),
-            onPressed: () {
-              // Aksi ketika profil diklik (misalnya ke halaman profil)
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Profil diklik!')));
+            onSelected: (value) {
+              if (value == 'logout') {
+                showDialog(
+                  context: context,
+                  builder:
+                      (_) => AlertDialog(
+                        title: const Text('Logout'),
+                        content: const Text('Apakah Anda yakin ingin logout?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Batal'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context); // Tutup dialog
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/login',
+                              ); // Kembali ke login
+                            },
+                            child: const Text('Logout'),
+                          ),
+                        ],
+                      ),
+                );
+              } else {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Selected: $value')));
+              }
             },
+            itemBuilder:
+                (BuildContext context) => [
+                  const PopupMenuItem<String>(
+                    value: 'logout',
+                    child: Text('Logout'),
+                  ),
+                ],
           ),
         ],
       ),

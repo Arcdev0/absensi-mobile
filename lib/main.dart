@@ -20,6 +20,7 @@ class MyApp extends StatelessWidget {
       ),
       home: const LoginPage(),
       routes: {
+        '/login': (context) => const LoginPage(),
         '/main':
             (context) => MainScreen(
               userToken: ModalRoute.of(context)!.settings.arguments as String,
