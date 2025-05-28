@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/Home_screen.dart';
+import 'package:flutter_application_1/screens/barcode_screen.dart';
 import 'package:flutter_application_1/screens/history_screen.dart';
-import 'package:flutter_application_1/screens/home_screen.dart';
-import '../services/api_service.dart'; // Pastikan path import benar
+import 'package:flutter_application_1/screens/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final String userToken;
@@ -15,14 +14,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 1; // Default ke Home (tengah)
 
+  // Daftar halaman untuk bottom navigation
   final List<Widget> _pages = [
     HistoryScreen(),
-    HomeScreen(
-      userToken: '',
-      apiService: ApiService(),
-    ), // Ganti dengan widget.userToken nanti
-    // SettingsScreen
-    // (),
+    BarcodeScreen(),
+    SettingsScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -37,15 +33,21 @@ class _MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+          child: Image.asset(
+            'assets/logo.png', // Ganti dengan path logo kamu
+            fit: BoxFit.contain,
+          ),
         ),
         title: const Text('Aplikasi Absensi'),
         actions: [
           IconButton(
             icon: const CircleAvatar(
-              backgroundImage: AssetImage('assets/profile.png'),
+              backgroundImage: AssetImage(
+                'assets/profile.png',
+              ), // Ganti dengan foto profil
             ),
             onPressed: () {
+              // Aksi ketika profil diklik (misalnya ke halaman profil)
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(const SnackBar(content: Text('Profil diklik!')));

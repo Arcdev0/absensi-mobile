@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/Home_screen.dart';
-import 'package:flutter_application_1/services/api_service.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
+import 'package:flutter_application_1/services/api_service.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 
@@ -77,7 +76,7 @@ class _LoginPageState extends State<LoginPage>
       if (token != null) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen(userToken: token)),
+          MaterialPageRoute(builder: (context) => MainScreen(userToken: token)),
         );
       } else {
         throw Exception('Token tidak ditemukan');
