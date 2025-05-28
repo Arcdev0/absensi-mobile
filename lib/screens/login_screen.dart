@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/change_password_screen.dart';
-import 'package:flutter_application_1/services/api_service.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
+import 'package:flutter_application_1/services/api_service.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'dart:io';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -64,15 +65,19 @@ class _LoginPageState extends State<LoginPage>
     setState(() => _isLoading = true);
 
     try {
+      // final deviceId = await _getDeviceId(); // Ambil device ID (Asli - dikomentari)
+      final deviceId = 'dummy-device-id-123456'; // Dummy device ID
+
       final token = await _apiService.login(
         _emailController.text.trim(),
         _passwordController.text.trim(),
+        deviceId, // Kirim device ID dummy ke service
       );
 
       if (token != null) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen(userToken: token)),
+          MaterialPageRoute(builder: (context) => MainScreen(userToken: token)),
         );
       } else {
         throw Exception('Token tidak ditemukan');
@@ -95,6 +100,32 @@ class _LoginPageState extends State<LoginPage>
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  // Fungsi asli tetap dipertahankan jika nanti ingin digunakan kembali
+  Future<String> _getDeviceId() async {
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+
+    if (Platform.isAndroid) {
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      return androidInfo.id ??
+          'unknown_android_id'; // Ganti androidId dengan id
+    } else if (Platform.isIOS) {
+      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+      return iosInfo.identifierForVendor ?? 'unknown_ios_id';
+    }
+
+    return 'unknown_device';
+  }
+
+  Future<bool> _checkAndroid10OrAbove() async {
+    if (!Platform.isAndroid) return false;
+    final androidInfo = await DeviceInfoPlugin().androidInfo;
+    return androidInfo.version.sdkInt >= 29;
+  }
+
+  Future<String> _getAlternativeAndroidId(AndroidDeviceInfo androidInfo) async {
+    return 'alt-android-${androidInfo.board}-${androidInfo.bootloader}-${androidInfo.fingerprint?.hashCode}';
   }
 
   @override
@@ -238,9 +269,7 @@ class _LoginPageState extends State<LoginPage>
                               ),
                               const SizedBox(height: 16),
                               TextButton(
-                                onPressed: () {
-                                  
-                                },
+                                onPressed: () {},
                                 child: Text(
                                   'Lupa Password?',
                                   style: TextStyle(color: Colors.blue.shade800),
