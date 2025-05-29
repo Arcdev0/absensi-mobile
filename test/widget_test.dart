@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_application_1/screens/login_screen.dart'; // Import LoginScreen
+import 'package:flutter_application_1/screens/login_screen.dart';
 
 void main() {
   testWidgets('Login page has email and password fields', (
@@ -53,7 +53,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verifikasi navigasi ke HomeScreen
-    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.byType(MainScreen), findsOneWidget);
   });
 }
 

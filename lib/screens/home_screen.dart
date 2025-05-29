@@ -1,84 +1,104 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart'; // Pastikan path import benar
-import 'login_screen.dart'; // Sesuaikan dengan struktur folder Anda
+import 'package:flutter_application_1/screens/barcode_screen.dart';
+import 'package:flutter_application_1/screens/history_screen.dart';
+import 'package:flutter_application_1/screens/settings_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  final ApiService apiService;
+class MainScreen extends StatefulWidget {
   final String userToken;
+  const MainScreen({super.key, required this.userToken});
 
-  HomeScreen({
-    super.key,
-    required this.userToken,
-    ApiService? apiService, // Parameter opsional untuk testing
-  }) : apiService = apiService ?? ApiService();
+  @override
+  _MainScreenState createState() => _MainScreenState();
+}
 
-  Future<void> _logout(BuildContext context) async {
-    try {
-      final success = await apiService.logout(userToken);
+class _MainScreenState extends State<MainScreen> {
+  int _selectedIndex = 1; // Default ke Home (tengah)
 
-      if (success) {
-        // Menggunakan pushAndRemoveUntil untuk memastikan semua rute sebelumnya dihapus
-        // sehingga pengguna tidak bisa kembali ke home screen dengan tombol back
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-          (Route<dynamic> route) => false, // Hapus semua rute sebelumnya
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Logout gagal, coba lagi')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-    }
+  // Daftar halaman untuk bottom navigation
+  final List<Widget> _pages = [
+    HistoryScreen(),
+    BarcodeScreen(),
+    SettingsScreen(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Untuk menampilkan token yang lebih aman dari error substring
-    String displayedToken =
-        userToken.length > 10 ? '${userToken.substring(0, 10)}...' : userToken;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.asset(
+            'assets/logo.png', // Ganti dengan path logo kamu
+            fit: BoxFit.contain,
+          ),
+        ),
+        title: const Text('Aplikasi Absensi'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _logout(context),
+          PopupMenuButton<String>(
+            icon: const CircleAvatar(
+              backgroundImage: AssetImage('assets/profile.png'),
+            ),
+            onSelected: (value) {
+              if (value == 'logout') {
+                showDialog(
+                  context: context,
+                  builder:
+                      (_) => AlertDialog(
+                        title: const Text('Logout'),
+                        content: const Text('Apakah Anda yakin ingin logout?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Batal'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context); // Tutup dialog
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/login',
+                              ); // Kembali ke login
+                            },
+                            child: const Text('Logout'),
+                          ),
+                        ],
+                      ),
+                );
+              } else {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Selected: $value')));
+              }
+            },
+            itemBuilder:
+                (BuildContext context) => [
+                  const PopupMenuItem<String>(
+                    value: 'logout',
+                    child: Text('Logout'),
+                  ),
+                ],
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Selamat Datang',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Token: $displayedToken', // Menggunakan token yang sudah dicek panjangnya
-              style: const TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () => _logout(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 15,
-                ),
-              ),
-              child: const Text('Logout'),
-            ),
-          ],
-        ),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.blue,
+        onTap: _onItemTapped,
       ),
     );
   }
