@@ -65,12 +65,13 @@ class _LoginPageState extends State<LoginPage>
     setState(() => _isLoading = true);
 
     try {
-      final deviceId = await _getDeviceId(); // Ambil device ID
+      // final deviceId = await _getDeviceId(); // Ambil device ID (Asli - dikomentari)
+      final deviceId = 'dummy-device-id-123456'; // Dummy device ID
 
       final token = await _apiService.login(
         _emailController.text.trim(),
         _passwordController.text.trim(),
-        deviceId, // Kirim device ID ke service
+        deviceId, // Kirim device ID dummy ke service
       );
 
       if (token != null) {
@@ -101,6 +102,7 @@ class _LoginPageState extends State<LoginPage>
     }
   }
 
+  // Fungsi asli tetap dipertahankan jika nanti ingin digunakan kembali
   Future<String> _getDeviceId() async {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
 
@@ -267,9 +269,7 @@ class _LoginPageState extends State<LoginPage>
                               ),
                               const SizedBox(height: 16),
                               TextButton(
-                                onPressed: () {
-                                  
-                                },
+                                onPressed: () {},
                                 child: Text(
                                   'Lupa Password?',
                                   style: TextStyle(color: Colors.blue.shade800),
