@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -27,10 +28,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _showNewPassword = false;
   bool _showConfirmPassword = false;
 
-  void showSnackBar(String message, {Color color = Colors.red}) {
+  void showSnackBar(String message, {Color color = Colors.red, Duration duration = const Duration(seconds: 2)}) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color, duration: duration,));
   }
 
   @override
@@ -43,20 +44,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     final newPasswordHasError =
-        _newPassword.isNotEmpty && _newPassword == _currentPassword;
-        _newPassword.length < 6;
+        _newPassword.isNotEmpty &&
+        (_newPassword == _currentPassword || _newPassword.length < 6);
 
     final confirmPasswordHasError =
         _confirmNewPassword.isNotEmpty && _confirmNewPassword != _newPassword;
-    _confirmNewPassword.isNotEmpty && _confirmNewPassword == _currentPassword;
 
     final confirmPasswordIsValid =
-        _confirmNewPassword.isNotEmpty && _confirmNewPassword == _newPassword;
+        _confirmNewPassword.isNotEmpty &&
+        _confirmNewPassword == _newPassword &&
+        _newPassword != _currentPassword &&
+        _newPassword.length >= 6;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Change Password')),
+      appBar: AppBar(title: const Text('')),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Center(
@@ -129,7 +131,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     hintText: 'Enter new password',
                     errorText:
                         newPasswordHasError
-                            ? 'Password tidak boleh sama dengan sebelumnya'
+                            ? '${_newPassword.length < 6 ? 'Password tidak boleh kurang dari 6 karakter' : 'Password tidak boleh sama dengan sebelumnya'}'
                             : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
@@ -264,11 +266,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         return;
                       }
 
-                      // Hit API
                       try {
                         showSnackBar(
                           "Mengubah password...",
                           color: Colors.blue,
+                          duration: const Duration(seconds: 1),
                         );
                         final api = ApiService();
                         final message = await api.changePassword(
@@ -278,17 +280,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           confirmPassword: _confirmNewPassword,
                         );
 
-                        showSnackBar(message, color: Colors.green);
+                        showSnackBar(message, color: Colors.green, duration: const Duration(seconds: 2));
 
-                        // Reset field
-                        _currentPasswordController.clear();
-                        _newPasswordController.clear();
-                        _confirmPasswordController.clear();
-                        setState(() {
-                          _currentPassword = '';
-                          _newPassword = '';
-                          _confirmNewPassword = '';
-                        });
+                        // Tunggu 2 detik sebelum navigasi agar user lihat feedback visual
+                        await Future.delayed(const Duration(seconds: 1));
+
+                        // Navigasi ke MainScreen
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    MainScreen(userToken: widget.userToken),
+                          ),
+                        );
                       } catch (e) {
                         showSnackBar(
                           'Gagal: ${e.toString()}',
@@ -296,6 +301,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         );
                       }
                     },
+
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                       shape: RoundedRectangleBorder(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/change_password_screen.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -68,19 +69,31 @@ class _LoginPageState extends State<LoginPage>
       // final deviceId = await _getDeviceId(); // Ambil device ID (Asli - dikomentari)
       final deviceId = 'dummy-device-id-123456'; // Dummy device ID
 
-      final token = await _apiService.login(
+      final result = await _apiService.login(
         _emailController.text.trim(),
         _passwordController.text.trim(),
-        deviceId, // Kirim device ID dummy ke service
+        deviceId,
       );
 
-      if (token != null) {
+      final token = result['token'];
+      final mustChangePassword = result['must_change_password'] ?? false;
+
+      if (token == null) {
+        throw Exception('Token tidak ditemukan');
+      }
+
+      if (mustChangePassword) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChangePasswordScreen(userToken: token),
+          ),
+        );
+      } else {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => MainScreen(userToken: token)),
         );
-      } else {
-        throw Exception('Token tidak ditemukan');
       }
     } catch (e) {
       String errorMessage;
@@ -102,7 +115,6 @@ class _LoginPageState extends State<LoginPage>
     }
   }
 
-  // Fungsi asli tetap dipertahankan jika nanti ingin digunakan kembali
   Future<String> _getDeviceId() async {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
 
@@ -269,7 +281,9 @@ class _LoginPageState extends State<LoginPage>
                               ),
                               const SizedBox(height: 16),
                               TextButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  // Navigasi ke halaman lupa password
+                                },
                                 child: Text(
                                   'Lupa Password?',
                                   style: TextStyle(color: Colors.blue.shade800),
