@@ -15,11 +15,19 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 1; // Default ke Home (tengah)
 
   // Daftar halaman untuk bottom navigation
-  final List<Widget> _pages = [
-    HistoryScreen(),
-    BarcodeScreen(),
-    SettingsScreen(),
-  ];
+  late List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      HistoryScreen(),
+      BarcodeScreen(),
+      SettingsScreen(
+        userToken: widget.userToken,
+      ), // Kirim token dari MainScreen
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {

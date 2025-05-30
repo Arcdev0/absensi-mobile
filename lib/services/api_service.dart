@@ -8,12 +8,13 @@ class ApiService {
   final String baseUrl = 'http://193.203.160.191:83/api';
 
   // Metode untuk melakukan login
-  Future<String?> login(String email, String password, String deviceId) async {
+  Future<Map<String, dynamic>> login(
+    String email,
+    String password,
+    String deviceId,
+  ) async {
     final url = Uri.parse('$baseUrl/login');
     try {
-      print(
-        'Kirim ke server: ${jsonEncode({'email': email, 'password': password, 'device_id': deviceId})}',
-      );
       final response = await http.post(
         url,
         headers: {
@@ -27,29 +28,20 @@ class ApiService {
         }),
       );
 
-      print(
-        'Login Response: Status ${response.statusCode}, Body: ${response.body}',
-      );
+      print('Login Response: ${response.statusCode}, ${response.body}');
+      final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data != null) {
+        final token =
+            data['access_token'] ?? data['token'] ?? data['data']['token'];
+        final mustChangePassword =
+            data['data']?['user']?['must_change_password'] ?? false;
 
-        if (data['access_token'] != null) {
-          return data['access_token'];
-        } else if (data['token'] != null) {
-          return data['token'];
-        } else if (data['data'] != null && data['data']['token'] != null) {
-          return data['data']['token'];
-        } else {
-          throw Exception('Token tidak ditemukan di respons');
-        }
+        return {'token': token, 'must_change_password': mustChangePassword};
       } else {
-        final errorData = jsonDecode(response.body);
-        String errorMessage = errorData['message'] ?? 'Login gagal';
-        throw Exception(errorMessage);
+        throw Exception(data['message'] ?? 'Login failed');
       }
     } catch (e) {
-      print('Login error: $e');
       throw Exception('Gagal login: $e');
     }
   }
@@ -97,48 +89,46 @@ class ApiService {
   }
 
   Future<String> changePassword({
-  required String token,
-  required String currentPassword,
-  required String newPassword,
-  required String confirmPassword,
-}) async {
-  final url = Uri.parse('$baseUrl/change-password');
-  try {
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
-        'current_password': currentPassword,
-        'new_password': newPassword,
-        'new_password_confirmation': confirmPassword,
-      }),
-    );
+    required String token,
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final url = Uri.parse('$baseUrl/change-password');
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'current_password': currentPassword,
+          'new_password': newPassword,
+          'new_password_confirmation': confirmPassword,
+        }),
+      );
 
-    print(
-      'Change Password Response: Status ${response.statusCode}, Body: ${response.body}',
-    );
+      print(
+        'Change Password Response: Status ${response.statusCode}, Body: ${response.body}',
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['success'] == true) {
-        return data['message'] ?? 'Password changed successfully.';
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          return data['message'] ?? 'Password changed successfully.';
+        } else {
+          throw Exception(data['message'] ?? 'Failed to change password.');
+        }
       } else {
-        throw Exception(data['message'] ?? 'Failed to change password.');
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['message'] ?? 'Change password failed.');
       }
-    } else {
-      final errorData = jsonDecode(response.body);
-      throw Exception(errorData['message'] ?? 'Change password failed.');
+    } catch (e) {
+      print('Change Password Error: $e');
+      throw Exception('Gagal mengubah password: $e');
     }
-  } catch (e) {
-    print('Change Password Error: $e');
-    throw Exception('Gagal mengubah password: $e');
   }
+  
 }
-
-}
-
-
