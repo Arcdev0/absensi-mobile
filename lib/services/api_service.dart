@@ -36,8 +36,9 @@ class ApiService {
             data['access_token'] ?? data['token'] ?? data['data']['token'];
         final mustChangePassword =
             data['data']?['user']?['must_change_password'] ?? false;
+        final uuid = data['data']?['user']?['uuid'];
 
-        return {'token': token, 'must_change_password': mustChangePassword};
+        return {'token': token, 'must_change_password': mustChangePassword, 'uuid':uuid};
       } else {
         throw Exception(data['message'] ?? 'Login failed');
       }

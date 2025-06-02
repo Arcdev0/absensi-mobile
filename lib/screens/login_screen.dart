@@ -77,6 +77,7 @@ class _LoginPageState extends State<LoginPage>
 
       final token = result['token'];
       final mustChangePassword = result['must_change_password'] ?? false;
+      final uuid = result['uuid'];
 
       if (token == null) {
         throw Exception('Token tidak ditemukan');
@@ -86,13 +87,13 @@ class _LoginPageState extends State<LoginPage>
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => ChangePasswordScreen(userToken: token),
+            builder: (context) => ChangePasswordScreen(userToken: token, userUUID: uuid),
           ),
         );
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MainScreen(userToken: token)),
+          MaterialPageRoute(builder: (context) => MainScreen(userToken: token, userUUID: uuid)),
         );
       }
     } catch (e) {

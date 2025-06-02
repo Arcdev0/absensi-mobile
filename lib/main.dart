@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
         '/main':
             (context) => MainScreen(
               userToken: ModalRoute.of(context)!.settings.arguments as String,
+              userUUID : ModalRoute.of(context)!.settings.arguments as String,
             ),
       },
     );

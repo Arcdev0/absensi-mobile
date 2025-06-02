@@ -5,7 +5,8 @@ import 'package:flutter_application_1/screens/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final String userToken;
-  const MainScreen({super.key, required this.userToken});
+  final String userUUID;
+  const MainScreen({super.key, required this.userToken, required this.userUUID});
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -22,7 +23,7 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _pages = [
       HistoryScreen(),
-      BarcodeScreen(),
+      BarcodeScreen(userUUID: widget.userUUID),
       SettingsScreen(
         userToken: widget.userToken,
       ), // Kirim token dari MainScreen
@@ -50,7 +51,7 @@ class _MainScreenState extends State<MainScreen> {
         actions: [
           PopupMenuButton<String>(
             icon: const CircleAvatar(
-              backgroundImage: AssetImage('assets/profile.png'),
+              backgroundImage: AssetImage('profile.png'),
             ),
             onSelected: (value) {
               if (value == 'logout') {
