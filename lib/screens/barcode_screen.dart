@@ -1,28 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'dart:math';
 
-// Singleton untuk menyimpan data QR Code dan timer agar persisten
 class QrCodeManager {
   static final QrCodeManager _instance = QrCodeManager._internal();
 
-  factory QrCodeManager() {
-    return _instance;
-  }
+  factory QrCodeManager() => _instance;
 
   String userUUID = '';
 
-void setUUID(String uuid) {
-  if (userUUID != uuid) {
-    userUUID = uuid;
-    _updateQrData();
-    _countdownSeconds = 300;
-    _listener?.call(_currentQrData, _countdownSeconds);
-    print("UUID changed, QR code regenerated.");
+  void setUUID(String uuid) {
+    if (userUUID != uuid) {
+      userUUID = uuid;
+      _updateQrData();
+      _countdownSeconds = 300;
+      _listener?.call(_currentQrData, _countdownSeconds);
+      print("UUID changed, QR code regenerated.");
+    }
   }
-}
-
 
   QrCodeManager._internal();
 
@@ -38,9 +35,7 @@ void setUUID(String uuid) {
   late String _currentQrData;
   late Timer _timer;
   late int _countdownSeconds;
-
   bool _isInitialized = false;
-
   Function(String, int)? _listener;
 
   String get currentQrData => _currentQrData;
@@ -49,7 +44,6 @@ void setUUID(String uuid) {
 
   void initialize() {
     if (_isInitialized) return;
-
     print("Initializing QrCodeManager...");
     _updateQrData();
     _countdownSeconds = 300;
@@ -100,9 +94,7 @@ void setUUID(String uuid) {
 }
 
 class BarcodeScreen extends StatefulWidget {
-  final String? userUUID; // nullable dan tidak wajib
-
-  const BarcodeScreen({super.key, this.userUUID});
+  const BarcodeScreen({super.key});
 
   @override
   State<BarcodeScreen> createState() => _BarcodeScreenState();
@@ -112,19 +104,24 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
   final QrCodeManager _qrCodeManager = QrCodeManager();
   String _qrData = "";
   int _countdown = 0;
+  String? _uuid;
 
   @override
   void initState() {
     super.initState();
+    _loadUUIDFromPrefs();
+  }
 
-    // Kalau userUUID null, pakai empty string
-    final uuid = widget.userUUID ?? '';
+  Future<void> _loadUUIDFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uuid = prefs.getString('uuid') ?? '';
 
-    // Set UUID ke manager
+    setState(() {
+      _uuid = uuid;
+    });
+
     _qrCodeManager.setUUID(uuid);
-
     _qrCodeManager.initialize();
-
     _qrCodeManager.addListener((data, countdown) {
       if (mounted) {
         setState(() {
@@ -153,8 +150,10 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Tampilkan UUID jika ada, atau teks default
-          UuidDisplayWidget(uuid: widget.userUUID ?? 'UUID tidak tersedia'),
+          if (_uuid != null)
+            UuidDisplayWidget(uuid: _uuid!)
+          else
+            const CircularProgressIndicator(),
 
           const SizedBox(height: 20),
 
@@ -213,33 +212,38 @@ class UuidDisplayWidget extends StatelessWidget {
   }
 }
 
-// Main function, contoh pemakaian BarcodeScreen dengan UUID
-void main() {
+// Main app dan entry point
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Contoh UUID (seharusnya dari login response)
-  const exampleUUID = '123e4567-e89b-12d3-a456-426614174000';
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('uuid', '123e4567-e89b-12d3-a456-426614174000');
 
-  QrCodeManager().setUUID(exampleUUID);
-  QrCodeManager().initialize();
-
-  runApp(MyApp(userUUID: exampleUUID));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final String userUUID;
-
-  const MyApp({super.key, required this.userUUID});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'QR Code App',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: Scaffold(
-        appBar: AppBar(title: const Text('QR Code Generator')),
-        body: BarcodeScreen(userUUID: userUUID),
-      ),
+      home: const MainScreen(),
+    );
+  }
+}
+
+class MainScreen extends StatelessWidget {
+  const MainScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Main Screen')),
+      body:
+          const BarcodeScreen(), // Panggil BarcodeScreen tanpa Scaffold & AppBar
     );
   }
 }

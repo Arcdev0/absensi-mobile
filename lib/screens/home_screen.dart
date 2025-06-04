@@ -23,7 +23,7 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _pages = [
       HistoryScreen(),
-      BarcodeScreen(userUUID: widget.userUUID),
+      BarcodeScreen(),
       SettingsScreen(
         userToken: widget.userToken,
       ), // Kirim token dari MainScreen

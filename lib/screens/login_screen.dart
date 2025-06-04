@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_application_1/screens/change_password_screen.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
@@ -79,6 +80,10 @@ class _LoginPageState extends State<LoginPage>
       final mustChangePassword = result['must_change_password'] ?? false;
       final uuid = result['uuid'];
 
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', token ?? '');
+      await prefs.setString('uuid', uuid ?? '');
+      
       if (token == null) {
         throw Exception('Token tidak ditemukan');
       }
@@ -87,13 +92,17 @@ class _LoginPageState extends State<LoginPage>
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => ChangePasswordScreen(userToken: token, userUUID: uuid),
+            builder:
+                (context) =>
+                    ChangePasswordScreen(userToken: token, userUUID: uuid),
           ),
         );
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MainScreen(userToken: token, userUUID: uuid)),
+          MaterialPageRoute(
+            builder: (context) => MainScreen(userToken: token, userUUID: uuid),
+          ),
         );
       }
     } catch (e) {
