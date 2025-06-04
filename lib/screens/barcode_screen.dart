@@ -10,6 +10,7 @@ class QrCodeManager {
   factory QrCodeManager() => _instance;
 
   String userUUID = '';
+  late DateTime _lastGeneratedTime;
 
   void setUUID(String uuid) {
     if (userUUID != uuid) {
@@ -53,16 +54,22 @@ class QrCodeManager {
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _countdownSeconds--;
-      if (_countdownSeconds <= 0) {
+      final now = DateTime.now();
+      final diff = now.difference(_lastGeneratedTime).inSeconds;
+
+      if (diff >= 300) {
         _updateQrData();
         _countdownSeconds = 300;
+      } else {
+        _countdownSeconds = 300 - diff;
       }
+
       _listener?.call(_currentQrData, _countdownSeconds);
     });
   }
 
   void _updateQrData() {
+    _lastGeneratedTime = DateTime.now();
     final now = DateTime.now();
     final formattedDate =
         "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}";
@@ -100,15 +107,29 @@ class BarcodeScreen extends StatefulWidget {
   State<BarcodeScreen> createState() => _BarcodeScreenState();
 }
 
-class _BarcodeScreenState extends State<BarcodeScreen> {
+class _BarcodeScreenState extends State<BarcodeScreen>
+    with WidgetsBindingObserver {
   final QrCodeManager _qrCodeManager = QrCodeManager();
   String _qrData = "";
   int _countdown = 0;
   String? _uuid;
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final now = DateTime.now();
+      final lastTime = _qrCodeManager._lastGeneratedTime;
+      final diff = now.difference(lastTime).inSeconds;
+
+      if (diff >= 300) {
+        _qrCodeManager.setUUID(_qrCodeManager.userUUID);
+      }
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadUUIDFromPrefs();
   }
 
@@ -134,6 +155,7 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _qrCodeManager.removeListener();
     super.dispose();
   }
