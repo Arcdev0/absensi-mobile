@@ -12,7 +12,7 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Settings'),
       ),
-      body: ChangePasswordScreen(userToken: userToken),
+      body: ChangePasswordScreen(userToken: userToken, userUUID: ''),
     );
   }
 }

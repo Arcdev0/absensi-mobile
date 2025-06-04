@@ -4,8 +4,9 @@ import 'package:flutter_application_1/services/api_service.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   final String userToken; // UserToken harus disediakan
+  final String userUUID;
 
-  ChangePasswordScreen({required this.userToken});
+  ChangePasswordScreen({required this.userToken, required this.userUUID});
 
   @override
   _ChangePasswordScreenState createState() => _ChangePasswordScreenState();
@@ -28,10 +29,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _showNewPassword = false;
   bool _showConfirmPassword = false;
 
-  void showSnackBar(String message, {Color color = Colors.red, Duration duration = const Duration(seconds: 2)}) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color, duration: duration,));
+  void showSnackBar(
+    String message, {
+    Color color = Colors.red,
+    Duration duration = const Duration(seconds: 2),
+  }) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: color,
+      duration: duration,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -280,7 +291,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           confirmPassword: _confirmNewPassword,
                         );
 
-                        showSnackBar(message, color: Colors.green, duration: const Duration(seconds: 2));
+                        showSnackBar(
+                          message,
+                          color: Colors.green,
+                          duration: const Duration(seconds: 2),
+                        );
 
                         // Tunggu 2 detik sebelum navigasi agar user lihat feedback visual
                         await Future.delayed(const Duration(seconds: 1));
@@ -290,8 +305,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           context,
                           MaterialPageRoute(
                             builder:
-                                (context) =>
-                                    MainScreen(userToken: widget.userToken),
+                                (context) => MainScreen(
+                                  userToken: widget.userToken,
+                                  userUUID: widget.userUUID,
+                                ),
                           ),
                         );
                       } catch (e) {

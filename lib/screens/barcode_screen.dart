@@ -1,71 +1,90 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'dart:math';
 
-// Singleton untuk menyimpan data QR Code dan timer agar persisten
 class QrCodeManager {
   static final QrCodeManager _instance = QrCodeManager._internal();
 
-  factory QrCodeManager() {
-    return _instance;
+  factory QrCodeManager() => _instance;
+
+  String userUUID = '';
+  late DateTime _lastGeneratedTime;
+
+  void setUUID(String uuid) {
+    if (userUUID != uuid) {
+      userUUID = uuid;
+      _updateQrData();
+      _countdownSeconds = 300;
+      _listener?.call(_currentQrData, _countdownSeconds);
+      print("UUID changed, QR code regenerated.");
+    }
   }
 
   QrCodeManager._internal();
 
-  final List<String> _dummyData = [
-    "DATA_QR_CODE_12345",
-    "ANOTHER_VALUE_98765",
-    "THIRD_DUMMY_CODE_ABCDE",
-  ];
+  static String _generateRandomCode(int length) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final rand = Random();
+    return List.generate(
+      length,
+      (index) => chars[rand.nextInt(chars.length)],
+    ).join();
+  }
 
   late String _currentQrData;
   late Timer _timer;
-  late int _countdownSeconds; // Ini yang perlu dipastikan terinisialisasi
-
-  // Menambahkan flag untuk melacak apakah sudah diinisialisasi
+  late int _countdownSeconds;
   bool _isInitialized = false;
-
   Function(String, int)? _listener;
 
   String get currentQrData => _currentQrData;
   int get countdownSeconds => _countdownSeconds;
-  bool get isInitialized => _isInitialized; // Getter untuk status inisialisasi
+  bool get isInitialized => _isInitialized;
 
   void initialize() {
-    if (_isInitialized) return; // Mencegah inisialisasi berulang
-
+    if (_isInitialized) return;
     print("Initializing QrCodeManager...");
-    // Inisialisasi data pertama kali
-    _currentQrData = _dummyData[0];
-    _countdownSeconds = 300; // 5 menit = 300 detik
-
+    _updateQrData();
+    _countdownSeconds = 300;
     _startTimer();
     _isInitialized = true;
   }
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _countdownSeconds--;
-      if (_countdownSeconds <= 0) {
+      final now = DateTime.now();
+      final diff = now.difference(_lastGeneratedTime).inSeconds;
+
+      if (diff >= 300) {
         _updateQrData();
-        _countdownSeconds = 300; // Reset countdown
+        _countdownSeconds = 300;
+      } else {
+        _countdownSeconds = 300 - diff;
       }
+
       _listener?.call(_currentQrData, _countdownSeconds);
     });
   }
 
   void _updateQrData() {
-    final random = Random();
-    _currentQrData = _dummyData[random.nextInt(_dummyData.length)];
+    _lastGeneratedTime = DateTime.now();
+    final now = DateTime.now();
+    final formattedDate =
+        "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}";
+    final formattedTime =
+        "${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}";
+    final randomCode = _generateRandomCode(8);
+
+    _currentQrData =
+        "${userUUID}_${formattedDate}_${formattedTime}_$randomCode";
     print("QR Code data updated to: $_currentQrData");
   }
 
   void addListener(Function(String, int) listener) {
     _listener = listener;
-    // Panggil listener segera setelah ditambahkan agar widget menampilkan data awal
     if (_isInitialized) {
-      // Pastikan sudah diinisialisasi sebelum memanggil listener
       _listener?.call(_currentQrData, _countdownSeconds);
     }
   }
@@ -76,34 +95,54 @@ class QrCodeManager {
 
   void dispose() {
     _timer.cancel();
-    _isInitialized =
-        false; // Reset status inisialisasi jika benar-benar dibuang
+    _isInitialized = false;
     print("QrCodeManager disposed.");
   }
 }
 
 class BarcodeScreen extends StatefulWidget {
-  final String userName;
-  final String userEmail;
-
-  const BarcodeScreen({super.key, this.userName = '', this.userEmail = ''});
+  const BarcodeScreen({super.key});
 
   @override
   State<BarcodeScreen> createState() => _BarcodeScreenState();
 }
 
-class _BarcodeScreenState extends State<BarcodeScreen> {
+class _BarcodeScreenState extends State<BarcodeScreen>
+    with WidgetsBindingObserver {
   final QrCodeManager _qrCodeManager = QrCodeManager();
   String _qrData = "";
   int _countdown = 0;
+  String? _uuid;
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final now = DateTime.now();
+      final lastTime = _qrCodeManager._lastGeneratedTime;
+      final diff = now.difference(lastTime).inSeconds;
+
+      if (diff >= 300) {
+        _qrCodeManager.setUUID(_qrCodeManager.userUUID);
+      }
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    // Inisialisasi manager di sini juga sebagai fallback,
-    // atau pastikan di main() sudah dipanggil
-    _qrCodeManager.initialize();
+    WidgetsBinding.instance.addObserver(this);
+    _loadUUIDFromPrefs();
+  }
 
+  Future<void> _loadUUIDFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uuid = prefs.getString('uuid') ?? '';
+
+    setState(() {
+      _uuid = uuid;
+    });
+
+    _qrCodeManager.setUUID(uuid);
+    _qrCodeManager.initialize();
     _qrCodeManager.addListener((data, countdown) {
       if (mounted) {
         setState(() {
@@ -116,8 +155,8 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _qrCodeManager.removeListener();
-    // Tidak dispose manager di sini agar persisten antar halaman
     super.dispose();
   }
 
@@ -133,12 +172,20 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          if (_uuid != null)
+            UuidDisplayWidget(uuid: _uuid!)
+          else
+            const CircularProgressIndicator(),
+
+          const SizedBox(height: 20),
+
           const Text(
             'Halaman Barcode',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
+
           const SizedBox(height: 30),
-          // Pastikan _qrData tidak kosong sebelum mencoba membuat QrImageView
+
           if (_qrData.isNotEmpty)
             QrImageView(
               data: _qrData,
@@ -148,32 +195,52 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
               gapless: true,
             )
           else
-            const CircularProgressIndicator(), // Tampilkan loading jika data belum ada
+            const CircularProgressIndicator(),
+
           const SizedBox(height: 30),
+
           const Text(
             'QR Code akan berubah dalam:',
             style: TextStyle(fontSize: 18),
           ),
+
           Text(
             _formatDuration(_countdown),
             style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
           ),
+
           const SizedBox(height: 20),
-          Text(
-            'Data QR saat ini: $_qrData', // Menampilkan data QR saat ini (opsional)
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
-          ),
         ],
       ),
     );
   }
 }
 
-// Pastikan Anda memanggil QrCodeManager().initialize() di fungsi main()
-void main() {
-  WidgetsFlutterBinding.ensureInitialized(); // Pastikan binding Flutter sudah siap
-  QrCodeManager()
-      .initialize(); // Inisialisasi QrCodeManager sekali di awal aplikasi
+class UuidDisplayWidget extends StatelessWidget {
+  final String uuid;
+
+  const UuidDisplayWidget({super.key, required this.uuid});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'UUID: $uuid',
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: Colors.blueAccent,
+      ),
+    );
+  }
+}
+
+// Main app dan entry point
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('uuid', '123e4567-e89b-12d3-a456-426614174000');
+
   runApp(const MyApp());
 }
 
@@ -181,21 +248,24 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  /*************  ✨ Windsurf Command ⭐  *************/
-  /// Builds the main application widget tree.
-  ///
-  /// This method returns a [MaterialApp] widget configured with a title, theme,
-  /// and a home screen that consists of a [Scaffold] with an [AppBar] and a
-  /// [BarcodeScreen] as its body.
-  /*******  fdd7b337-27b7-4453-8468-b08bcacf7ad0  *******/
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'QR Code App',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: Scaffold(
-        appBar: AppBar(title: const Text('QR Code Generator')),
-        body: const BarcodeScreen(), // Tampilkan BarcodeScreen
-      ),
+      home: const MainScreen(),
+    );
+  }
+}
+
+class MainScreen extends StatelessWidget {
+  const MainScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Main Screen')),
+      body:
+          const BarcodeScreen(), // Panggil BarcodeScreen tanpa Scaffold & AppBar
     );
   }
 }
