@@ -9,9 +9,6 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
       body: ChangePasswordScreen(userToken: userToken, userUUID: ''),
     );
   }
