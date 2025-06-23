@@ -79,11 +79,15 @@ class _LoginPageState extends State<LoginPage>
       final token = result['token'];
       final mustChangePassword = result['must_change_password'] ?? false;
       final uuid = result['uuid'];
+      final id = result['id'];
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token ?? '');
       await prefs.setString('uuid', uuid ?? '');
-      
+      if (id is int) {
+        await prefs.setInt('id', id);
+      }
+
       if (token == null) {
         throw Exception('Token tidak ditemukan');
       }

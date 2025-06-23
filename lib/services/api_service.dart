@@ -37,8 +37,9 @@ class ApiService {
         final mustChangePassword =
             data['data']?['user']?['must_change_password'] ?? false;
         final uuid = data['data']?['user']?['uuid'];
+        final id = data['data']?['user']?['id'];
 
-        return {'token': token, 'must_change_password': mustChangePassword, 'uuid':uuid};
+        return {'token': token, 'must_change_password': mustChangePassword, 'uuid':uuid, 'id':id};
       } else {
         throw Exception(data['message'] ?? 'Login failed');
       }
@@ -131,5 +132,40 @@ class ApiService {
       throw Exception('Gagal mengubah password: $e');
     }
   }
+
+  Future<List<Map<String, dynamic>>> getHistoryByID({
+  required int id,
+  required String token,
+}) async {
+  final url = Uri.parse('$baseUrl/history/$id');
+
+  try {
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': '*/*',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    print('History Response: ${response.statusCode}, ${response.body}');
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['data'] != null && data['data'] is List) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      } else {
+        throw Exception('Format data tidak valid');
+      }
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Gagal mengambil history');
+    }
+  } catch (e) {
+    print('Error saat ambil history: $e');
+    throw Exception('Terjadi kesalahan: $e');
+  }
+}
+
   
 }
