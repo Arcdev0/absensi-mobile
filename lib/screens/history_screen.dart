@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_application_1/services/api_service.dart';
 import 'dart:convert';
 
 class HistoryScreen extends StatefulWidget {
@@ -36,28 +37,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
 Future<void> _fetchHistory(int id, String token) async {
-  final url = Uri.parse("http://193.203.160.191:83/api/history/$id");
   try {
-    final response = await http.get(
-      url,
-      headers: {
-        "Accept": "*/*",
-        "Authorization": "Bearer $token",
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final body = json.decode(response.body);
-      final List<dynamic> data = body['data'];
-      setState(() {
-        _historyData = data.map((e) => e as Map<String, dynamic>).toList();
-        _isLoading = false;
-      });
-    } else {
-      throw Exception('Gagal memuat data');
-    }
+    final apiService = ApiService();
+    final data = await apiService.getHistoryByID(id: id, token: token);
+    setState(() {
+      _historyData = data;
+      _isLoading = false;
+    });
   } catch (e) {
-    print("Error: $e");
+    print("Error saat ambil history: $e");
     setState(() => _isLoading = false);
   }
 }
