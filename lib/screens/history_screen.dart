@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -9,44 +11,51 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  String? _uuid;
-  int _currentPage = 1;
-  final int _itemsPerPage = 5;
-
-  // Dummy data absen
-  final List<Map<String, String>> _dummyHistory = List.generate(
-    25,
-    (index) => {
-      'date': '2025-06-${(index % 30 + 1).toString().padLeft(2, '0')}',
-      'time': '${8 + (index % 3)}:${(index % 60).toString().padLeft(2, '0')}',
-      'status': index % 2 == 0 ? 'Hadir' : 'Terlambat',
-      'location': 'Lokasi ${index % 4 + 1}'
-    },
-  );
+  int? _id;
+  List<Map<String, dynamic>> _historyData = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUUID();
+    _loadID();
   }
 
-  Future<void> _loadUUID() async {
+  Future<void> _loadID() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _uuid = prefs.getString('uuid');
-    });
+    int? id = prefs.getInt('id');
+    setState(() => _id = id);
+    if (id != null) {
+      await _fetchHistory(id);
+    }
   }
 
-  List<Map<String, String>> get _paginatedData {
-    int start = (_currentPage - 1) * _itemsPerPage;
-    int end = start + _itemsPerPage;
-    return _dummyHistory.sublist(
-      start,
-      end > _dummyHistory.length ? _dummyHistory.length : end,
-    );
-  }
+  Future<void> _fetchHistory(int id) async {
+    final url = Uri.parse("http://193.203.160.191:83/api/history/$id");
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          "Accept": "*/*",
+          "Authorization": "Bearer 1|0ZNts3xhnevdzBsaydNwjqps0qj", // Token contoh
+        },
+      );
 
-  int get _totalPages => (_dummyHistory.length / _itemsPerPage).ceil();
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        final List<dynamic> data = body['data'];
+        setState(() {
+          _historyData = data.map((e) => e as Map<String, dynamic>).toList();
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Gagal memuat data');
+      }
+    } catch (e) {
+      print("Error: $e");
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +64,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         title: const Text('Riwayat Absen'),
         centerTitle: true,
       ),
-      body: _uuid == null
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
@@ -64,64 +73,47 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   padding: const EdgeInsets.all(12),
                   color: Colors.grey.shade200,
                   child: Text(
-                    'UUID: $_uuid',
+                    'ID: $_id',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
                 Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: _paginatedData.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final item = _paginatedData[index];
-                      return Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  child: _historyData.isEmpty
+                      ? const Center(child: Text('Tidak ada data riwayat.'))
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(12),
+                          itemCount: _historyData.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final item = _historyData[index];
+                            return Card(
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor:
+                                      item['status'] == 'Presensi'
+                                          ? Colors.green
+                                          : Colors.red,
+                                  child: Icon(
+                                    item['status'] == 'Presensi'
+                                        ? Icons.check
+                                        : Icons.close,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                title: Text(
+                                    '${item['date']} (${item['type'] ?? "-"})'),
+                                subtitle: Text(
+                                    'Status: ${item['status']}\nCatatan: ${item['extra']}'),
+                                isThreeLine: true,
+                              ),
+                            );
+                          },
                         ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: item['status'] == 'Hadir'
-                                ? Colors.green
-                                : Colors.orange,
-                            child: Icon(
-                              item['status'] == 'Hadir'
-                                  ? Icons.check
-                                  : Icons.access_time,
-                              color: Colors.white,
-                            ),
-                          ),
-                          title: Text('${item['date']} - ${item['time']}'),
-                          subtitle: Text('Status: ${item['status']}\nLokasi: ${item['location']}'),
-                          isThreeLine: true,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: _currentPage > 1
-                            ? () => setState(() => _currentPage--)
-                            : null,
-                        child: const Text('Sebelumnya'),
-                      ),
-                      const SizedBox(width: 16),
-                      Text('Halaman $_currentPage dari $_totalPages'),
-                      const SizedBox(width: 16),
-                      ElevatedButton(
-                        onPressed: _currentPage < _totalPages
-                            ? () => setState(() => _currentPage++)
-                            : null,
-                        child: const Text('Berikutnya'),
-                      ),
-                    ],
-                  ),
                 )
               ],
             ),
