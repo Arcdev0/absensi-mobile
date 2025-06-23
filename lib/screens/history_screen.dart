@@ -31,7 +31,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _fetchHistory(int id) async {
-    final url = Uri.parse("http://193.203.160.191:83/api/history/$id");
+    final url = Uri.parse("http://127.0.0.1:8000/api/history/$id");
     try {
       final response = await http.get(
         url,
