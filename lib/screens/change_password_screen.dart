@@ -5,7 +5,7 @@ import 'package:flutter_application_1/services/api_service.dart';
 class ChangePasswordScreen extends StatefulWidget {
   final String userToken; // UserToken harus disediakan
 
-  ChangePasswordScreen({required this.userToken});
+  const ChangePasswordScreen({super.key, required this.userToken});
 
   @override
   _ChangePasswordScreenState createState() => _ChangePasswordScreenState();
@@ -28,10 +28,18 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _showNewPassword = false;
   bool _showConfirmPassword = false;
 
-  void showSnackBar(String message, {Color color = Colors.red, Duration duration = const Duration(seconds: 2)}) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color, duration: duration,));
+  void showSnackBar(
+    String message, {
+    Color color = Colors.red,
+    Duration duration = const Duration(seconds: 2),
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: duration,
+      ),
+    );
   }
 
   @override
@@ -131,7 +139,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     hintText: 'Enter new password',
                     errorText:
                         newPasswordHasError
-                            ? '${_newPassword.length < 6 ? 'Password tidak boleh kurang dari 6 karakter' : 'Password tidak boleh sama dengan sebelumnya'}'
+                            ? _newPassword.length < 6
+                                ? 'Password tidak boleh kurang dari 6 karakter'
+                                : 'Password tidak boleh sama dengan sebelumnya'
                             : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
@@ -280,7 +290,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           confirmPassword: _confirmNewPassword,
                         );
 
-                        showSnackBar(message, color: Colors.green, duration: const Duration(seconds: 2));
+                        showSnackBar(
+                          message,
+                          color: Colors.green,
+                          duration: const Duration(seconds: 2),
+                        );
 
                         // Tunggu 2 detik sebelum navigasi agar user lihat feedback visual
                         await Future.delayed(const Duration(seconds: 1));

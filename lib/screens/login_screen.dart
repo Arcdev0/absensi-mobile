@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/change_password_screen.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -82,6 +83,11 @@ class _LoginPageState extends State<LoginPage>
         throw Exception('Token tidak ditemukan');
       }
 
+      // Save token and must_change_password to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_token', token);
+      await prefs.setBool('must_change_password', mustChangePassword);
+
       if (mustChangePassword) {
         Navigator.pushReplacement(
           context,
@@ -120,8 +126,7 @@ class _LoginPageState extends State<LoginPage>
 
     if (Platform.isAndroid) {
       AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-      return androidInfo.id ??
-          'unknown_android_id'; // Ganti androidId dengan id
+      return androidInfo.id ?? 'unknown_android_id';
     } else if (Platform.isIOS) {
       IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       return iosInfo.identifierForVendor ?? 'unknown_ios_id';
@@ -137,7 +142,7 @@ class _LoginPageState extends State<LoginPage>
   }
 
   Future<String> _getAlternativeAndroidId(AndroidDeviceInfo androidInfo) async {
-    return 'alt-android-${androidInfo.board}-${androidInfo.bootloader}-${androidInfo.fingerprint?.hashCode}';
+    return 'alt-android-${androidInfo.board}-${androidInfo.bootloader}-${androidInfo.fingerprint.hashCode}';
   }
 
   @override

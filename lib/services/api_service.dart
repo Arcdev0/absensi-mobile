@@ -1,7 +1,5 @@
 import 'dart:convert'; // Untuk encode dan decode JSON
 import 'package:http/http.dart' as http; // Library untuk HTTP requests
-import 'package:device_info_plus/device_info_plus.dart';
-import 'dart:io';
 
 class ApiService {
   // Base URL untuk API Anda. Penting: Ganti ini jika IP server berubah.
@@ -130,5 +128,4 @@ class ApiService {
       throw Exception('Gagal mengubah password: $e');
     }
   }
-  
 }

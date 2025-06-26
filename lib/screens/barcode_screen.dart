@@ -187,7 +187,7 @@ class MyApp extends StatelessWidget {
   /// This method returns a [MaterialApp] widget configured with a title, theme,
   /// and a home screen that consists of a [Scaffold] with an [AppBar] and a
   /// [BarcodeScreen] as its body.
-  /*******  fdd7b337-27b7-4453-8468-b08bcacf7ad0  *******/
+  /// *****  fdd7b337-27b7-4453-8468-b08bcacf7ad0  ******
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'QR Code App',
