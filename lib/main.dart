@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_application_1/screens/login_screen.dart';
+import 'package:flutter_application_1/screens/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,14 +19,13 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const LoginPage(),
+      home: const SplashScreen(),
       routes: {
         '/login': (context) => const LoginPage(),
-        '/main':
-            (context) => MainScreen(
-              userToken: ModalRoute.of(context)!.settings.arguments as String,
-              userUUID : ModalRoute.of(context)!.settings.arguments as String,
-            ),
+        '/main': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map;
+          return MainScreen(userToken: args['token'], userUUID: args['uuid']);
+        },
       },
     );
   }

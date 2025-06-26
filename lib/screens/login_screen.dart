@@ -4,6 +4,7 @@ import 'package:flutter_application_1/screens/change_password_screen.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'dart:io';
 
 class LoginPage extends StatefulWidget {
@@ -86,6 +87,7 @@ class _LoginPageState extends State<LoginPage>
       await prefs.setString('uuid', uuid ?? '');
       if (id is int) {
         await prefs.setInt('id', id);
+        await prefs.setBool('isLoggedIn', true);
       }
 
       if (token == null) {
@@ -112,18 +114,23 @@ class _LoginPageState extends State<LoginPage>
     } catch (e) {
       String errorMessage;
       if (e.toString().contains('Invalid email')) {
-        errorMessage = 'Email tidak ditemukan';
+        errorMessage = '';
       } else if (e.toString().contains('Invalid')) {
-        errorMessage = 'Email atau password salah';
+        errorMessage = '';
       } else if (e.toString().contains('network')) {
-        errorMessage = 'Gagal terhubung ke server, periksa koneksi Anda';
+        errorMessage = '';
       } else {
-        errorMessage = 'Error: $e';
+        errorMessage = 'Email atau password salah';
       }
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.error,
+        animType: AnimType.bottomSlide,
+        title: 'Login Gagal',
+        desc: errorMessage,
+        btnOkOnPress: () {},
+        btnOkColor: Colors.red,
+      ).show();
     } finally {
       setState(() => _isLoading = false);
     }

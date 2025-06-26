@@ -15,6 +15,7 @@ dependencies:
   http: ^1.4.0
   device_info_plus: ^11.4.0
   qr_flutter: ^4.1.0
+  awesome_dialog: ^3.1.0
 
 dev_dependencies:
   flutter_test:
