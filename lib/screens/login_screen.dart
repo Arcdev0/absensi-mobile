@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_application_1/screens/change_password_screen.dart';
-import 'package:flutter_application_1/screens/home_screen.dart';
-import 'package:flutter_application_1/services/api_service.dart';
+import 'package:arcdev_absensi/screens/change_password_screen.dart';
+import 'package:arcdev_absensi/screens/home_screen.dart';
+import 'package:arcdev_absensi/services/api_service.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'dart:io';
@@ -199,7 +199,7 @@ class _LoginPageState extends State<LoginPage>
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const FlutterLogo(size: 80),
+                              Image.asset('assets/images/ARC.png', height: 80),
                               const SizedBox(height: 24),
                               Text(
                                 'Selamat Datang',
@@ -289,7 +289,12 @@ class _LoginPageState extends State<LoginPage>
                                   child:
                                       _isLoading
                                           ? const CircularProgressIndicator(
-                                            color: Colors.white,
+                                            color: Color.fromARGB(
+                                              255,
+                                              255,
+                                              255,
+                                              255,
+                                            ),
                                           )
                                           : const Text(
                                             'LOGIN',

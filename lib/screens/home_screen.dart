@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/barcode_screen.dart';
-import 'package:flutter_application_1/screens/history_screen.dart';
-import 'package:flutter_application_1/screens/settings_screen.dart';
+import 'package:arcdev_absensi/screens/barcode_screen.dart';
+import 'package:arcdev_absensi/screens/history_screen.dart';
+import 'package:arcdev_absensi/screens/settings_screen.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatefulWidget {
   final String userToken;
   final String userUUID;
-  const MainScreen({super.key, required this.userToken, required this.userUUID});
+  const MainScreen({
+    super.key,
+    required this.userToken,
+    required this.userUUID,
+  });
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -42,12 +48,11 @@ class _MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Image.asset(
-            'assets/logo.png', // Ganti dengan path logo kamu
-            fit: BoxFit.contain,
-          ),
+          child: Image.asset('assets/ARC.png', fit: BoxFit.contain),
         ),
         title: const Text('Aplikasi Absensi'),
+        centerTitle: true,
+        elevation: 0,
         actions: [
           PopupMenuButton<String>(
             icon: const CircleAvatar(
@@ -55,34 +60,26 @@ class _MainScreenState extends State<MainScreen> {
             ),
             onSelected: (value) {
               if (value == 'logout') {
-                showDialog(
+                AwesomeDialog(
                   context: context,
-                  builder:
-                      (_) => AlertDialog(
-                        title: const Text('Logout'),
-                        content: const Text('Apakah Anda yakin ingin logout?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Batal'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(context); // Tutup dialog
-                              Navigator.pushReplacementNamed(
-                                context,
-                                '/login',
-                              ); // Kembali ke login
-                            },
-                            child: const Text('Logout'),
-                          ),
-                        ],
-                      ),
-                );
-              } else {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text('Selected: $value')));
+                  dialogType: DialogType.warning,
+                  animType: AnimType.bottomSlide,
+                  title: 'Konfirmasi Logout',
+                  desc: 'Apakah Anda yakin ingin logout?',
+                  btnCancelOnPress: () {},
+                  btnCancelText: 'Batal',
+                  btnOkOnPress: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.remove('token');
+                    await prefs.remove('uuid');
+                    await prefs.remove('id');
+                    await prefs.setBool('isLoggedIn', false);
+
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
+                  btnOkText: 'Logout',
+                  btnOkColor: Colors.red,
+                ).show();
               }
             },
             itemBuilder:
