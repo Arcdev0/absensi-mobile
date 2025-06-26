@@ -14,9 +14,11 @@ class ChangePasswordScreen extends StatefulWidget {
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   String _currentPassword = '';
   String _newPassword = '';
@@ -53,13 +55,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final newPasswordHasError = _newPassword.isNotEmpty &&
+    final newPasswordHasError =
+        _newPassword.isNotEmpty &&
         (_newPassword == _currentPassword || _newPassword.length < 6);
 
     final confirmPasswordHasError =
         _confirmNewPassword.isNotEmpty && _confirmNewPassword != _newPassword;
 
-    final confirmPasswordIsValid = _confirmNewPassword.isNotEmpty &&
+    final confirmPasswordIsValid =
+        _confirmNewPassword.isNotEmpty &&
         _confirmNewPassword == _newPassword &&
         _newPassword != _currentPassword &&
         _newPassword.length >= 6;
@@ -101,8 +105,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 14.0,
+                      horizontal: 16.0,
+                    ),
                     hintText: 'Enter old password',
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -111,11 +117,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             : Icons.visibility_off,
                       ),
                       onPressed: () {
-                        setState(() => _showCurrentPassword = !_showCurrentPassword);
+                        setState(
+                          () => _showCurrentPassword = !_showCurrentPassword,
+                        );
                       },
                     ),
                   ),
-                  onChanged: (value) => setState(() => _currentPassword = value),
+                  onChanged:
+                      (value) => setState(() => _currentPassword = value),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your current password';
@@ -139,11 +148,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   onChanged: (value) => setState(() => _newPassword = value),
                   decoration: InputDecoration(
                     hintText: 'Enter new password',
-                    errorText: newPasswordHasError
-                        ? (_newPassword.length < 6
-                            ? 'Password harus minimal 6 karakter'
-                            : 'Password tidak boleh sama dengan sebelumnya')
-                        : null,
+                    errorText:
+                        newPasswordHasError
+                            ? (_newPassword.length < 6
+                                ? 'Password harus minimal 6 karakter'
+                                : 'Password tidak boleh sama dengan sebelumnya')
+                            : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
@@ -155,7 +165,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _showNewPassword ? Icons.visibility : Icons.visibility_off,
+                        _showNewPassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() => _showNewPassword = !_showNewPassword);
@@ -188,26 +200,31 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: !_showConfirmPassword,
-                  onChanged: (value) => setState(() => _confirmNewPassword = value),
+                  onChanged:
+                      (value) => setState(() => _confirmNewPassword = value),
                   decoration: InputDecoration(
                     hintText: 'Confirm new password',
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 14.0,
+                      horizontal: 16.0,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
                       borderSide: BorderSide(
-                        color: confirmPasswordIsValid
-                            ? Colors.green
-                            : Colors.grey.shade400,
+                        color:
+                            confirmPasswordIsValid
+                                ? Colors.green
+                                : Colors.grey.shade400,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
                       borderSide: BorderSide(
-                        color: confirmPasswordIsValid ? Colors.green : Colors.blue,
+                        color:
+                            confirmPasswordIsValid ? Colors.green : Colors.blue,
                         width: 2.0,
                       ),
                     ),
@@ -219,7 +236,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       borderRadius: BorderRadius.circular(8.0),
                       borderSide: const BorderSide(color: Colors.red),
                     ),
-                    errorText: confirmPasswordHasError ? 'Password tidak sinkron' : null,
+                    errorText:
+                        confirmPasswordHasError
+                            ? 'Password tidak sinkron'
+                            : null,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showConfirmPassword
@@ -227,7 +247,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             : Icons.visibility_off,
                       ),
                       onPressed: () {
-                        setState(() => _showConfirmPassword = !_showConfirmPassword);
+                        setState(
+                          () => _showConfirmPassword = !_showConfirmPassword,
+                        );
                       },
                     ),
                   ),
@@ -252,7 +274,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       setState(() => _submitted = true);
 
                       final formValid = _formKey.currentState!.validate();
-                      final confirmPasswordIsEmpty = _confirmNewPassword.trim().isEmpty;
+                      final confirmPasswordIsEmpty =
+                          _confirmNewPassword.trim().isEmpty;
                       final passwordMatch = _newPassword == _confirmNewPassword;
                       final isSameAsOld = _newPassword == _currentPassword;
 
@@ -298,10 +321,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MainScreen(
-                              userToken: widget.userToken,
-                              userUUID: widget.userUUID,
-                            ),
+                            builder:
+                                (context) => MainScreen(
+                                  userToken: widget.userToken,
+                                  userUUID: widget.userUUID,
+                                ),
                           ),
                         );
                       } catch (e) {

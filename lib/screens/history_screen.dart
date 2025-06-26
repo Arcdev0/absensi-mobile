@@ -37,7 +37,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
         url,
         headers: {
           "Accept": "*/*",
-          "Authorization": "Bearer 1|0ZNts3xhnevdzBsaydNwjqps0qj", // Token contoh
+          "Authorization":
+              "Bearer 1|0ZNts3xhnevdzBsaydNwjqps0qj", // Token contoh
         },
       );
 
@@ -60,63 +61,66 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Riwayat Absen'),
-        centerTitle: true,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  color: Colors.grey.shade200,
-                  child: Text(
-                    'ID: $_id',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+      appBar: AppBar(title: const Text('Riwayat Absen'), centerTitle: true),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    color: Colors.grey.shade200,
+                    child: Text(
+                      'ID: $_id',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: _historyData.isEmpty
-                      ? const Center(child: Text('Tidak ada data riwayat.'))
-                      : ListView.separated(
-                          padding: const EdgeInsets.all(12),
-                          itemCount: _historyData.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 10),
-                          itemBuilder: (context, index) {
-                            final item = _historyData[index];
-                            return Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor:
-                                      item['status'] == 'Presensi'
-                                          ? Colors.green
-                                          : Colors.red,
-                                  child: Icon(
-                                    item['status'] == 'Presensi'
-                                        ? Icons.check
-                                        : Icons.close,
-                                    color: Colors.white,
+                  Expanded(
+                    child:
+                        _historyData.isEmpty
+                            ? const Center(
+                              child: Text('Tidak ada data riwayat.'),
+                            )
+                            : ListView.separated(
+                              padding: const EdgeInsets.all(12),
+                              itemCount: _historyData.length,
+                              separatorBuilder:
+                                  (_, __) => const SizedBox(height: 10),
+                              itemBuilder: (context, index) {
+                                final item = _historyData[index];
+                                return Card(
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                ),
-                                title: Text(
-                                    '${item['date']} (${item['type'] ?? "-"})'),
-                                subtitle: Text(
-                                    'Status: ${item['status']}\nCatatan: ${item['extra']}'),
-                                isThreeLine: true,
-                              ),
-                            );
-                          },
-                        ),
-                )
-              ],
-            ),
+                                  child: ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor:
+                                          item['status'] == 'Presensi'
+                                              ? Colors.green
+                                              : Colors.red,
+                                      child: Icon(
+                                        item['status'] == 'Presensi'
+                                            ? Icons.check
+                                            : Icons.close,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      '${item['date']} (${item['type'] ?? "-"})',
+                                    ),
+                                    subtitle: Text(
+                                      'Status: ${item['status']}\nCatatan: ${item['extra']}',
+                                    ),
+                                    isThreeLine: true,
+                                  ),
+                                );
+                              },
+                            ),
+                  ),
+                ],
+              ),
     );
   }
 }
