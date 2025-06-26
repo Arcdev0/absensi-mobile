@@ -1,9 +1,11 @@
 import 'dart:convert'; // Untuk encode dan decode JSON
 import 'package:http/http.dart' as http; // Library untuk HTTP requests
+import 'package:device_info_plus/device_info_plus.dart';
+import 'dart:io';
 
 class ApiService {
   // Base URL untuk API Anda. Penting: Ganti ini jika IP server berubah.
-  final String baseUrl = 'http://193.203.160.191:83/api';
+  final String baseUrl = 'http://127.0.0.1:8000/api';
 
   // Metode untuk melakukan login
   Future<Map<String, dynamic>> login(
@@ -34,8 +36,15 @@ class ApiService {
             data['access_token'] ?? data['token'] ?? data['data']['token'];
         final mustChangePassword =
             data['data']?['user']?['must_change_password'] ?? false;
+        final uuid = data['data']?['user']?['uuid'];
+        final id = data['data']?['user']?['id'];
 
-        return {'token': token, 'must_change_password': mustChangePassword};
+        return {
+          'token': token,
+          'must_change_password': mustChangePassword,
+          'uuid': uuid,
+          'id': id,
+        };
       } else {
         throw Exception(data['message'] ?? 'Login failed');
       }
@@ -126,6 +135,37 @@ class ApiService {
     } catch (e) {
       print('Change Password Error: $e');
       throw Exception('Gagal mengubah password: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getHistoryByID({
+    required int id,
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/history/$id');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Accept': '*/*', 'Authorization': 'Bearer $token'},
+      );
+
+      print('History Response: ${response.statusCode}, ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['data'] != null && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        } else {
+          throw Exception('Format data tidak valid');
+        }
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['message'] ?? 'Gagal mengambil history');
+      }
+    } catch (e) {
+      print('Error saat ambil history: $e');
+      throw Exception('Terjadi kesalahan: $e');
     }
   }
 }

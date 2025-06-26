@@ -4,8 +4,9 @@ import 'package:flutter_application_1/services/api_service.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   final String userToken; // UserToken harus disediakan
+  final String userUUID;
 
-  const ChangePasswordScreen({super.key, required this.userToken});
+  ChangePasswordScreen({required this.userToken, required this.userUUID});
 
   @override
   _ChangePasswordScreenState createState() => _ChangePasswordScreenState();
@@ -33,13 +34,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     Color color = Colors.red,
     Duration duration = const Duration(seconds: 2),
   }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-        duration: duration,
-      ),
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: color,
+      duration: duration,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
     );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -66,30 +69,35 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         _newPassword.length >= 6;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('')),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Center(
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(title: const Text('Change Password')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Change Your Password',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
+
+                // Current Password Label
                 const Text(
                   'Current Password',
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 10),
+
+                // Current Password Field
                 TextFormField(
                   controller: _currentPasswordController,
                   obscureText: !_showCurrentPassword,
@@ -101,7 +109,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       vertical: 14.0,
                       horizontal: 16.0,
                     ),
-                    hintText: 'Enter Old password',
+                    hintText: 'Enter old password',
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showCurrentPassword
@@ -115,22 +123,25 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       },
                     ),
                   ),
-
                   onChanged:
                       (value) => setState(() => _currentPassword = value),
                   validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Please enter your password';
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your current password';
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 25),
+
+                // New Password Label
                 const Text(
                   'New Password',
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 10),
+
+                // New Password Field
                 TextFormField(
                   controller: _newPasswordController,
                   obscureText: !_showNewPassword,
@@ -139,9 +150,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     hintText: 'Enter new password',
                     errorText:
                         newPasswordHasError
-                            ? _newPassword.length < 6
-                                ? 'Password tidak boleh kurang dari 6 karakter'
-                                : 'Password tidak boleh sama dengan sebelumnya'
+                            ? (_newPassword.length < 6
+                                ? 'Password harus minimal 6 karakter'
+                                : 'Password tidak boleh sama dengan sebelumnya')
                             : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
@@ -170,16 +181,22 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     if (value == _currentPassword) {
                       return 'Password tidak boleh sama dengan sebelumnya';
                     }
+                    if (value.length < 6) {
+                      return 'Password harus minimal 6 karakter';
+                    }
                     return null;
                   },
                 ),
+                const SizedBox(height: 25),
 
-                const SizedBox(height: 20),
+                // Confirm New Password Label
                 const Text(
                   'Confirm New Password',
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 10),
+
+                // Confirm New Password Field
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: !_showConfirmPassword,
@@ -246,7 +263,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 30),
+
+                const SizedBox(height: 40),
+
+                // Submit Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -296,16 +316,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           duration: const Duration(seconds: 2),
                         );
 
-                        // Tunggu 2 detik sebelum navigasi agar user lihat feedback visual
                         await Future.delayed(const Duration(seconds: 1));
 
-                        // Navigasi ke MainScreen
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                             builder:
-                                (context) =>
-                                    MainScreen(userToken: widget.userToken),
+                                (context) => MainScreen(
+                                  userToken: widget.userToken,
+                                  userUUID: widget.userUUID,
+                                ),
                           ),
                         );
                       } catch (e) {
@@ -315,7 +335,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         );
                       }
                     },
-
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                       shape: RoundedRectangleBorder(
@@ -333,6 +352,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
