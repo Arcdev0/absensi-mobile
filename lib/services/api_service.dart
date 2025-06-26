@@ -5,7 +5,7 @@ import 'dart:io';
 
 class ApiService {
   // Base URL untuk API Anda. Penting: Ganti ini jika IP server berubah.
-  final String baseUrl = 'http://127.0.0.1:8000/api';
+  final String baseUrl = 'https://www.arcdevtest.xyz/api';
 
   // Metode untuk melakukan login
   Future<Map<String, dynamic>> login(
