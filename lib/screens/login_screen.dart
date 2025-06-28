@@ -8,7 +8,7 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'dart:io';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -158,7 +158,7 @@ class _LoginPageState extends State<LoginPage>
   }
 
   Future<String> _getAlternativeAndroidId(AndroidDeviceInfo androidInfo) async {
-    return 'alt-android-${androidInfo.board}-${androidInfo.bootloader}-${androidInfo.fingerprint?.hashCode}';
+    return 'alt-android-${androidInfo.board}-${androidInfo.bootloader}-${androidInfo.fingerprint.hashCode}';
   }
 
   @override
