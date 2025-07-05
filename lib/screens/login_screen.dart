@@ -5,6 +5,7 @@ import 'package:arcdev_absensi/screens/home_screen.dart';
 import 'package:arcdev_absensi/services/api_service.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 
 class LoginPage extends StatefulWidget {
@@ -85,6 +86,7 @@ class _LoginPageState extends State<LoginPage>
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token ?? '');
       await prefs.setString('uuid', uuid ?? '');
+      await prefs.setString('name', result['name'] ?? 'User');
       if (id is int) {
         await prefs.setInt('id', id);
         await prefs.setBool('isLoggedIn', true);
@@ -173,9 +175,9 @@ class _LoginPageState extends State<LoginPage>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.blue.shade900,
-                  Colors.blue.shade700,
-                  Colors.blue.shade500,
+                  Colors.blue.shade50,
+                  Colors.blue.shade100,
+                  Colors.white,
                 ],
                 stops: const [0.1, 0.5, 0.9],
               ),
@@ -188,32 +190,37 @@ class _LoginPageState extends State<LoginPage>
                   child: ScaleTransition(
                     scale: _scaleAnimation,
                     child: Card(
-                      elevation: 8,
+                      elevation: 10,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(24.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 32.0,
+                        ),
                         child: Form(
                           key: _formKey,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Image.asset('assets/images/ARC.png', height: 80),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 20),
                               Text(
                                 'Selamat Datang',
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.titleLarge?.copyWith(
-                                  color: Colors.blue.shade800,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 22,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade900,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 'Silakan login untuk melanjutkan',
-                                style: TextStyle(color: Colors.grey.shade600),
+                                style: GoogleFonts.poppins(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
+                                ),
                               ),
                               const SizedBox(height: 24),
                               TextFormField(
@@ -268,7 +275,7 @@ class _LoginPageState extends State<LoginPage>
                                     return 'Password tidak boleh kosong';
                                   }
                                   if (value.length < 6) {
-                                    return 'Password minimal 6 karakter';
+                                    return 'Password minimal 8 karakter';
                                   }
                                   return null;
                                 },
@@ -284,7 +291,7 @@ class _LoginPageState extends State<LoginPage>
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    elevation: 4,
+                                    elevation: 6,
                                   ),
                                   child:
                                       _isLoading
@@ -301,6 +308,7 @@ class _LoginPageState extends State<LoginPage>
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
+                                              color: Colors.white,
                                             ),
                                           ),
                                 ),
@@ -313,6 +321,14 @@ class _LoginPageState extends State<LoginPage>
                                 child: Text(
                                   'Lupa Password?',
                                   style: TextStyle(color: Colors.blue.shade800),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                '© 2025 ARCDEV',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
                                 ),
                               ),
                             ],
