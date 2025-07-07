@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -11,6 +12,7 @@ class QrCodeManager {
 
   String userUUID = '';
   late DateTime _lastGeneratedTime;
+  Position? _currentPosition;
 
   void setUUID(String uuid) {
     if (userUUID != uuid) {
@@ -53,12 +55,12 @@ class QrCodeManager {
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       final now = DateTime.now();
       final diff = now.difference(_lastGeneratedTime).inSeconds;
 
       if (diff >= 300) {
-        _updateQrData();
+        await _updateQrData();
         _countdownSeconds = 300;
       } else {
         _countdownSeconds = 300 - diff;
@@ -68,17 +70,43 @@ class QrCodeManager {
     });
   }
 
-  void _updateQrData() {
+  Future<void> _updateLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.deniedForever) return;
+
+      _currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+    } catch (e) {
+      print('Gagal mendapatkan lokasi: $e');
+    }
+  }
+
+  Future<void> _updateQrData() async {
+    await _updateLocation();
+
     _lastGeneratedTime = DateTime.now();
-    final now = DateTime.now();
+    final now = _lastGeneratedTime;
     final formattedDate =
         "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}";
     final formattedTime =
         "${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}";
     final randomCode = _generateRandomCode(8);
 
+    final locationPart = _currentPosition != null
+        ? "${_currentPosition!.latitude.toStringAsFixed(5)},${_currentPosition!.longitude.toStringAsFixed(5)}"
+        : "unknown_location";
+
     _currentQrData =
-        "${userUUID}_${formattedDate}_${formattedTime}_$randomCode";
+        "${userUUID}_${formattedDate}_${formattedTime}_${locationPart}_$randomCode";
+
     print("QR Code data updated to: $_currentQrData");
   }
 
@@ -113,6 +141,7 @@ class _BarcodeScreenState extends State<BarcodeScreen>
   String _qrData = "";
   int _countdown = 0;
   String? _uuid;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -172,20 +201,12 @@ class _BarcodeScreenState extends State<BarcodeScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (_uuid != null)
-            UuidDisplayWidget(uuid: _uuid!)
-          else
-            const CircularProgressIndicator(),
-
           const SizedBox(height: 20),
-
           const Text(
             'Halaman Barcode',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-
           const SizedBox(height: 30),
-
           if (_qrData.isNotEmpty)
             QrImageView(
               data: _qrData,
@@ -196,19 +217,15 @@ class _BarcodeScreenState extends State<BarcodeScreen>
             )
           else
             const CircularProgressIndicator(),
-
           const SizedBox(height: 30),
-
           const Text(
             'QR Code akan berubah dalam:',
             style: TextStyle(fontSize: 18),
           ),
-
           Text(
             _formatDuration(_countdown),
             style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
           ),
-
           const SizedBox(height: 20),
         ],
       ),
@@ -216,31 +233,10 @@ class _BarcodeScreenState extends State<BarcodeScreen>
   }
 }
 
-class UuidDisplayWidget extends StatelessWidget {
-  final String uuid;
-
-  const UuidDisplayWidget({super.key, required this.uuid});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      'UUID: $uuid',
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: Colors.blueAccent,
-      ),
-    );
-  }
-}
-
-// Main app dan entry point
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('uuid', '123e4567-e89b-12d3-a456-426614174000');
-
   runApp(const MyApp());
 }
 
@@ -264,8 +260,7 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Main Screen')),
-      body:
-          const BarcodeScreen(), // Panggil BarcodeScreen tanpa Scaffold & AppBar
+      body: const BarcodeScreen(),
     );
   }
 }
