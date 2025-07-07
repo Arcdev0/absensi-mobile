@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_application_1/services/api_service.dart';
 import 'dart:convert';
 
 class HistoryScreen extends StatefulWidget {
@@ -24,7 +25,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _loadID() async {
     final prefs = await SharedPreferences.getInstance();
     int? id = prefs.getInt('id');
+    String? token = prefs.getString('token');
+
     setState(() => _id = id);
+<<<<<<< HEAD
     if (id != null) {
       await _fetchHistory(id);
     }
@@ -54,9 +58,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
       }
     } catch (e) {
       print("Error: $e");
+=======
+    if (id != null && token != null) {
+      await _fetchHistory(id, token);
+    } else {
+      print("ID atau Token tidak ditemukan");
+>>>>>>> tyo
       setState(() => _isLoading = false);
     }
   }
+
+Future<void> _fetchHistory(int id, String token) async {
+  try {
+    final apiService = ApiService();
+    final data = await apiService.getHistoryByID(id: id, token: token);
+    setState(() {
+      _historyData = data;
+      _isLoading = false;
+    });
+  } catch (e) {
+    print("Error saat ambil history: $e");
+    setState(() => _isLoading = false);
+  }
+}
 
   @override
   Widget build(BuildContext context) {
