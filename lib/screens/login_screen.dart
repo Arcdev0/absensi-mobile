@@ -86,7 +86,7 @@ class _LoginPageState extends State<LoginPage>
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token ?? '');
       await prefs.setString('uuid', uuid ?? '');
-      await prefs.setString('name', result['name'] ?? 'User');
+      await prefs.setString('name', result['name'] ?? '');
       if (id is int) {
         await prefs.setInt('id', id);
         await prefs.setBool('isLoggedIn', true);
