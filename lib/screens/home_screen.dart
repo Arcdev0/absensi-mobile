@@ -70,7 +70,7 @@ class _MainScreenState extends State<MainScreen> {
             child: Row(
               children: [
                 Text(
-                  _userName,
+                  _userName ?? 'User',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
