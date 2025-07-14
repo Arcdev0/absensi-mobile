@@ -38,48 +38,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     String? token = prefs.getString('token');
 
     setState(() => _id = id);
-<<<<<<< HEAD
-<<<<<<< HEAD
-    if (id != null) {
-      await _fetchHistory(id);
-    }
-  }
-
-  Future<void> _fetchHistory(int id) async {
-    final url = Uri.parse("http://127.0.0.1:8000/api/history/$id");
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          "Accept": "*/*",
-          "Authorization":
-              "Bearer 1|0ZNts3xhnevdzBsaydNwjqps0qj", // Token contoh
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final body = json.decode(response.body);
-        final List<dynamic> data = body['data'];
-        setState(() {
-          _historyData = data.map((e) => e as Map<String, dynamic>).toList();
-          _isLoading = false;
-        });
-      } else {
-        throw Exception('Gagal memuat data');
-      }
-    } catch (e) {
-      print("Error: $e");
-=======
     if (id != null && token != null) {
       await _fetchHistory(id, token);
     } else {
-      print("ID atau Token tidak ditemukan");
->>>>>>> tyo
-=======
-    if (id != null && token != null) {
-      await _fetchHistory(id, token);
-    } else {
->>>>>>> 71da0d7f5cf5da12b5e11c6f988fd54ab99c1f2a
       setState(() => _isLoading = false);
     }
   }
