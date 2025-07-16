@@ -1,19 +1,23 @@
-# arcdev_absensi
+#Arcdev_Absensi
 
-A new Flutter project.
+Project baru dari Team Arcdev yaitu Aplikasi Absensi yang berfungsi untuk merekap Kehadiran bulanan, dengan melakukan Scan QR Code yang ditampilkan oleh Aplikasi Mobile menggunakan Alat Scanner ataupun Scan by Camera
 
-## Getting Started
+#Fitur
 
-This project is a starting point for a Flutter application.
+- Rekap Absensi Bulanan
+- Menampilkan QR dengan detail Jam serta Lokasi pengguna
+- History Kehadiran
 
-A few resources to get you started if this is your first Flutter project:
+#Teknologi
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Flutter
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+#Cara Instalasi
 
+- git clone repository ini
+- flutter pub get
+- flutter pub upgrade
+- flutter run
 
-Tes perubahan tampil di GitHub - Riyan
+#History perubahan
+
