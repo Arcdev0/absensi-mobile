@@ -5,24 +5,55 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'dart:math';
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('uuid', '123e4567-e89b-12d3-a456-426614174000');
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'QR Code App',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const MainScreen(),
+    );
+  }
+}
+
+class MainScreen extends StatelessWidget {
+  const MainScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Main Screen')),
+      body: const BarcodeScreen(),
+    );
+  }
+}
+
+// =========================================
+// QrCodeManager Singleton
+// =========================================
 class QrCodeManager {
   static final QrCodeManager _instance = QrCodeManager._internal();
 
   factory QrCodeManager() => _instance;
 
   String userUUID = '';
-  late DateTime _lastGeneratedTime;
+  DateTime _lastGeneratedTime = DateTime.now();
   Position? _currentPosition;
 
-  void setUUID(String uuid) {
-    if (userUUID != uuid) {
-      userUUID = uuid;
-      _updateQrData();
-      _countdownSeconds = 300;
-      _listener?.call(_currentQrData, _countdownSeconds);
-      print("UUID changed, QR code regenerated.");
-    }
-  }
+  late String _currentQrData;
+  late Timer _timer;
+  late int _countdownSeconds;
+  bool _isInitialized = false;
+  Function(String, int)? _listener;
 
   QrCodeManager._internal();
 
@@ -35,21 +66,25 @@ class QrCodeManager {
     ).join();
   }
 
-  late String _currentQrData;
-  late Timer _timer;
-  late int _countdownSeconds;
-  bool _isInitialized = false;
-  Function(String, int)? _listener;
-
   String get currentQrData => _currentQrData;
   int get countdownSeconds => _countdownSeconds;
   bool get isInitialized => _isInitialized;
+
+  void setUUID(String uuid) {
+    if (userUUID != uuid) {
+      userUUID = uuid;
+      _updateQrData();
+      _countdownSeconds = 60;
+      _listener?.call(_currentQrData, _countdownSeconds);
+      print("UUID changed, QR code regenerated.");
+    }
+  }
 
   void initialize() {
     if (_isInitialized) return;
     print("Initializing QrCodeManager...");
     _updateQrData();
-    _countdownSeconds = 300;
+    _countdownSeconds = 60;
     _startTimer();
     _isInitialized = true;
   }
@@ -59,11 +94,11 @@ class QrCodeManager {
       final now = DateTime.now();
       final diff = now.difference(_lastGeneratedTime).inSeconds;
 
-      if (diff >= 300) {
+      if (diff >= 60) {
         await _updateQrData();
-        _countdownSeconds = 300;
+        _countdownSeconds = 60;
       } else {
-        _countdownSeconds = 300 - diff;
+        _countdownSeconds = 60 - diff;
       }
 
       _listener?.call(_currentQrData, _countdownSeconds);
@@ -100,9 +135,10 @@ class QrCodeManager {
         "${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}";
     final randomCode = _generateRandomCode(8);
 
-    final locationPart = _currentPosition != null
-        ? "${_currentPosition!.latitude.toStringAsFixed(5)},${_currentPosition!.longitude.toStringAsFixed(5)}"
-        : "unknown_location";
+    final locationPart =
+        _currentPosition != null
+            ? "${_currentPosition!.latitude.toStringAsFixed(5)},${_currentPosition!.longitude.toStringAsFixed(5)}"
+            : "unknown_location";
 
     _currentQrData =
         "${userUUID}_${formattedDate}_${formattedTime}_${locationPart}_$randomCode";
@@ -126,7 +162,13 @@ class QrCodeManager {
     _isInitialized = false;
     print("QrCodeManager disposed.");
   }
+
+  DateTime get lastGeneratedTime => _lastGeneratedTime;
 }
+
+// =========================================
+// Barcode Screen UI
+// =========================================
 
 class BarcodeScreen extends StatefulWidget {
   const BarcodeScreen({super.key});
@@ -141,15 +183,16 @@ class _BarcodeScreenState extends State<BarcodeScreen>
   String _qrData = "";
   int _countdown = 0;
   String? _uuid;
+  String _name = '';
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       final now = DateTime.now();
-      final lastTime = _qrCodeManager._lastGeneratedTime;
+      final lastTime = _qrCodeManager.lastGeneratedTime;
       final diff = now.difference(lastTime).inSeconds;
 
-      if (diff >= 300) {
+      if (diff >= 60) {
         _qrCodeManager.setUUID(_qrCodeManager.userUUID);
       }
     }
@@ -165,9 +208,11 @@ class _BarcodeScreenState extends State<BarcodeScreen>
   Future<void> _loadUUIDFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     final uuid = prefs.getString('uuid') ?? '';
+    final name = prefs.getString('name') ?? '';
 
     setState(() {
       _uuid = uuid;
+      _name = name;
     });
 
     _qrCodeManager.setUUID(uuid);
@@ -197,70 +242,67 @@ class _BarcodeScreenState extends State<BarcodeScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 20),
-          const Text(
-            'Halaman Barcode',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          color: const Color(0xFF1449a0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Good Morning, $_name!',
+                style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 30),
-          if (_qrData.isNotEmpty)
-            QrImageView(
-              data: _qrData,
-              version: QrVersions.auto,
-              size: 250.0,
-              backgroundColor: Colors.white,
-              gapless: true,
-            )
-          else
-            const CircularProgressIndicator(),
-          const SizedBox(height: 30),
-          const Text(
-            'QR Code akan berubah dalam:',
-            style: TextStyle(fontSize: 18),
+        ),
+        const SizedBox(height: 24),
+        Expanded(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                if (_qrData.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: QrImageView(
+                      data: _qrData,
+                      version: QrVersions.auto,
+                      size: 200.0,
+                      backgroundColor: Colors.white,
+                      gapless: true,
+                    ),
+                  )
+                else
+                  const CircularProgressIndicator(),
+
+                const SizedBox(height: 16),
+                const Text(
+                  'QR akan berubah dalam :',
+                  style: TextStyle(fontSize: 12),
+                ),
+                Text(
+                  _formatDuration(_countdown),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
-          Text(
-            _formatDuration(_countdown),
-            style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-}
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('uuid', '123e4567-e89b-12d3-a456-426614174000');
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'QR Code App',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const MainScreen(),
-    );
-  }
-}
-
-class MainScreen extends StatelessWidget {
-  const MainScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Main Screen')),
-      body: const BarcodeScreen(),
+        ),
+      ],
     );
   }
 }

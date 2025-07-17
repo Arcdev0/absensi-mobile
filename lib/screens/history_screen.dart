@@ -19,8 +19,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   final DateFormat _apiDateFormat = DateFormat("HH:mm dd MMMM yyyy", 'en_US');
 
-  final Map<String, String> _statusNoteMap = {
-    'presensi': 'Kamu Hadir tepat waktu, tetap semangat ya!',
+  final Map<String, String> _typeNoteMap = {
+    'masuk': 'Kamu Hadir tepat waktu, tetap semangat ya!',
     'sakit': 'Kamu sakit ya, Semoga lekas sembuh ya!',
     'terlambat': 'Kamu terlambat nih, next time jangan lagi ya!',
     'izin': 'Semoga urusannya diperlancar ya!',
@@ -181,13 +181,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               itemBuilder: (context, index) {
                                 final item = _filteredData[index];
                                 final date = _apiDateFormat.parse(item['date']);
-                                final status = item['status'] ?? '';
-                                final color = _getStatusColor(status);
+                                final type = item['type'] ?? '';
+                                final color = _getTypeColor(type);
                                 final waktu = DateFormat(
                                   'hh.mm a',
                                 ).format(date);
                                 final note =
-                                    _statusNoteMap[status.toLowerCase()] ?? "-";
+                                    _typeNoteMap[type.toLowerCase()] ?? "-";
 
                                 return Container(
                                   margin: const EdgeInsets.only(bottom: 16),
@@ -248,7 +248,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     BorderRadius.circular(6),
                                               ),
                                               child: Text(
-                                                status,
+                                                type,
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
@@ -284,10 +284,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
+  Color _getTypeColor(String type) {
+    switch (type.toLowerCase()) {
       case 'hadir':
-      case 'presensi':
+      case 'masuk':
         return Colors.green;
       case 'sakit':
       case 'izin':
